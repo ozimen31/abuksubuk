@@ -153,6 +153,7 @@ export type Database = {
         Row: {
           auto_delivery: boolean | null
           auto_delivery_content: string | null
+          boosted_at: string | null
           category_id: string | null
           created_at: string | null
           description: string
@@ -172,6 +173,7 @@ export type Database = {
         Insert: {
           auto_delivery?: boolean | null
           auto_delivery_content?: string | null
+          boosted_at?: string | null
           category_id?: string | null
           created_at?: string | null
           description: string
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           auto_delivery?: boolean | null
           auto_delivery_content?: string | null
+          boosted_at?: string | null
           category_id?: string | null
           created_at?: string | null
           description?: string
@@ -341,10 +344,13 @@ export type Database = {
           bank_account_holder: string | null
           bank_iban: string | null
           bank_name: string | null
+          boost_count_today: number | null
+          boost_date: string | null
           created_at: string | null
           description: string | null
           id: string
           is_banned: boolean | null
+          last_boost_time: string | null
           last_login_at: string | null
           last_login_ip: unknown
           phone: string | null
@@ -363,10 +369,13 @@ export type Database = {
           bank_account_holder?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          boost_count_today?: number | null
+          boost_date?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          last_boost_time?: string | null
           last_login_at?: string | null
           last_login_ip?: unknown
           phone?: string | null
@@ -385,10 +394,13 @@ export type Database = {
           bank_account_holder?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          boost_count_today?: number | null
+          boost_date?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          last_boost_time?: string | null
           last_login_at?: string | null
           last_login_ip?: unknown
           phone?: string | null
@@ -717,6 +729,7 @@ export type Database = {
       }
       is_ip_banned: { Args: { ip: string }; Returns: boolean }
       is_user_banned: { Args: { user_uuid: string }; Returns: boolean }
+      reset_daily_boost_count: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
