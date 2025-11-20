@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Star, Package, Wallet, LogOut, User, Upload, Edit } from "lucide-react";
+import { Star, Package, Wallet, LogOut, User, Upload, Edit, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -260,6 +260,14 @@ const Profile = () => {
                   >
                     <Package className="w-4 h-4 mr-2" />
                     İlanlarım
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/orders")}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Siparişlerim
                   </Button>
                   <Button
                     onClick={() => navigate("/wallet")}

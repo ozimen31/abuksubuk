@@ -11,6 +11,7 @@ import ListingDetail from "./pages/ListingDetail";
 import CreateListing from "./pages/CreateListing";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Orders from "./pages/Orders";
 import Wallet from "./pages/Wallet";
 import Withdraw from "./pages/Withdraw";
 import Messages from "./pages/Messages";
@@ -33,6 +34,7 @@ const AppContent = () => {
           <Route path="/edit-listing/:id" element={<CreateListing />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/withdraw" element={<Withdraw />} />
           <Route path="/messages" element={<Messages />} />
