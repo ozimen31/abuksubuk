@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { LayoutDashboard, Users, FolderTree, Package, ShoppingCart, Images, Key, Wallet, Flag, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, FolderTree, Package, ShoppingCart, Images, Key, Wallet, Flag, Settings, HelpCircle, ShieldCheck } from "lucide-react";
 import DashboardTab from "@/components/admin/DashboardTab";
 import UsersTab from "@/components/admin/UsersTab";
 import CategoriesTab from "@/components/admin/CategoriesTab";
@@ -18,6 +18,7 @@ import WithdrawalsTab from "@/components/admin/WithdrawalsTab";
 import ReportsTab from "@/components/admin/ReportsTab";
 import SettingsTab from "@/components/admin/SettingsTab";
 import SupportTicketsTab from "@/components/admin/SupportTicketsTab";
+import VerificationTab from "@/components/admin/VerificationTab";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -81,6 +82,7 @@ const AdminPanel = () => {
             <TabsTrigger value="dashboard" className="flex flex-col items-center gap-1 py-3"><LayoutDashboard className="h-4 w-4" /><span className="text-xs">Panel</span></TabsTrigger>
             <TabsTrigger value="users" className="flex flex-col items-center gap-1 py-3"><Users className="h-4 w-4" /><span className="text-xs">Kullanıcılar</span></TabsTrigger>
             <TabsTrigger value="categories" className="flex flex-col items-center gap-1 py-3"><FolderTree className="h-4 w-4" /><span className="text-xs">Kategoriler</span></TabsTrigger>
+            <TabsTrigger value="verification" className="flex flex-col items-center gap-1 py-3"><ShieldCheck className="h-4 w-4" /><span className="text-xs">Doğrulama</span></TabsTrigger>
             <TabsTrigger value="listings" className="flex flex-col items-center gap-1 py-3"><Package className="h-4 w-4" /><span className="text-xs">İlanlar</span></TabsTrigger>
             <TabsTrigger value="orders" className="flex flex-col items-center gap-1 py-3"><ShoppingCart className="h-4 w-4" /><span className="text-xs">Siparişler</span></TabsTrigger>
             <TabsTrigger value="sliders" className="flex flex-col items-center gap-1 py-3"><Images className="h-4 w-4" /><span className="text-xs">Slider</span></TabsTrigger>
@@ -93,6 +95,7 @@ const AdminPanel = () => {
           <TabsContent value="dashboard"><DashboardTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="categories"><CategoriesTab /></TabsContent>
+          <TabsContent value="verification"><VerificationTab /></TabsContent>
           <TabsContent value="listings"><ListingsTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
           <TabsContent value="sliders"><SlidersTab /></TabsContent>

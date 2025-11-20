@@ -350,6 +350,7 @@ export type Database = {
           description: string | null
           id: string
           is_banned: boolean | null
+          is_verified: boolean | null
           last_boost_time: string | null
           last_login_at: string | null
           last_login_ip: unknown
@@ -375,6 +376,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          is_verified?: boolean | null
           last_boost_time?: string | null
           last_login_at?: string | null
           last_login_ip?: unknown
@@ -400,6 +402,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          is_verified?: boolean | null
           last_boost_time?: string | null
           last_login_at?: string | null
           last_login_ip?: unknown
@@ -668,6 +671,45 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          tc_no: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          last_name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          tc_no: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          tc_no?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       withdrawals: {
         Row: {
           admin_notes: string | null
@@ -743,6 +785,7 @@ export type Database = {
         | "cancelled"
       ticket_priority: "low" | "normal" | "high"
       ticket_status: "open" | "answered" | "closed"
+      verification_status: "pending" | "approved" | "rejected"
       withdrawal_status: "pending" | "approved" | "rejected" | "completed"
     }
     CompositeTypes: {
@@ -883,6 +926,7 @@ export const Constants = {
       ],
       ticket_priority: ["low", "normal", "high"],
       ticket_status: ["open", "answered", "closed"],
+      verification_status: ["pending", "approved", "rejected"],
       withdrawal_status: ["pending", "approved", "rejected", "completed"],
     },
   },

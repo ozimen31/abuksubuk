@@ -77,7 +77,7 @@ const Listings = () => {
       const userIds = data?.map((l) => l.user_id) || [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, username, seller_score, avatar_url, total_sales")
+        .select("user_id, username, seller_score, avatar_url, total_sales, is_verified")
         .in("user_id", userIds);
 
       const { data: roles } = await supabase
@@ -229,6 +229,14 @@ const Listings = () => {
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-xs">@{listing.profile?.username || "kullanıcı"}</span>
+                        {listing.profile?.is_verified && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                            alt="Verified" 
+                            className="w-4 h-4"
+                            title="Doğrulanmış Hesap"
+                          />
+                        )}
                         {listing.seller_role === 'admin' && (
                           <img 
                             src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
