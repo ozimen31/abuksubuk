@@ -12,6 +12,7 @@ import { Star, Eye, Shield, MessageSquare, User, Package, CreditCard } from "luc
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { ReportListingDialog } from "@/components/ReportListingDialog";
 
 const ListingDetail = () => {
   const { id } = useParams();
@@ -424,6 +425,11 @@ const ListingDetail = () => {
                     <MessageSquare className="w-5 h-5 mr-2" />
                     Satıcıya Mesaj
                   </Button>
+
+                  <ReportListingDialog 
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                  />
                 </div>
 
                 <Separator />
