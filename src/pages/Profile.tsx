@@ -42,6 +42,19 @@ const Profile = () => {
     },
   });
 
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session!.user.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const { data: listings } = useQuery({
     queryKey: ["my-listings", session?.user?.id],
     enabled: !!session?.user?.id,
@@ -231,6 +244,14 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-xl">{profile?.username || "Kullanıcı"}</h3>
+                      {userRole?.role === 'admin' && (
+                        <img 
+                          src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                          alt="Admin Rozeti" 
+                          className="w-6 h-6"
+                          title="Admin"
+                        />
+                      )}
                       {(profile?.total_sales ?? 0) > 0 && (
                         <img 
                           src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 

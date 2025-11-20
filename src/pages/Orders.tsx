@@ -29,6 +29,9 @@ interface OrderWithDetails {
     username: string;
     total_sales: number | null;
   } | null;
+  seller_role: {
+    role: string;
+  } | null;
   review: {
     rating: number;
     comment: string | null;
@@ -89,15 +92,23 @@ const Orders = () => {
         .in("order_id", orderIds)
         .eq("reviewer_id", session!.user.id);
 
+      // Fetch seller roles
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", sellerIds);
+
       // Merge data
       const enrichedOrders: OrderWithDetails[] = ordersData.map(order => {
         const listing = listingsData?.find(l => l.id === order.listing_id);
         const seller_profile = profilesData?.find(p => p.user_id === order.seller_id);
+        const seller_role = rolesData?.find(r => r.user_id === order.seller_id);
         const review = reviewsData?.find(r => r.order_id === order.id);
         return {
           ...order,
           listing: listing || null,
           seller_profile: seller_profile || null,
+          seller_role: seller_role || null,
           review: review || null,
         };
       });
@@ -194,6 +205,14 @@ const Orders = () => {
                         </CardTitle>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
                           <span>Satıcı: @{order.seller_profile?.username || "kullanıcı"}</span>
+                          {order.seller_role?.role === 'admin' && (
+                            <img 
+                              src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                              alt="Admin Rozeti" 
+                              className="w-4 h-4"
+                              title="Admin"
+                            />
+                          )}
                           {(order.seller_profile?.total_sales ?? 0) > 0 && (
                             <img 
                               src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 

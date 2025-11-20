@@ -17,6 +17,7 @@ interface Conversation {
   username: string;
   avatar_url: string | null;
   total_sales: number | null;
+  role: string | null;
   last_message: string;
   last_message_time: string;
   unread_count: number;
@@ -76,7 +77,14 @@ const Messages = () => {
         .select("user_id, username, avatar_url, total_sales")
         .in("user_id", Array.from(userIds));
 
+      // Fetch user roles
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", Array.from(userIds));
+
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]));
+      const roleMap = new Map(roles?.map(r => [r.user_id, r.role]));
 
       // Group by conversation partner
       const conversationMap = new Map<string, Conversation>();
@@ -84,6 +92,7 @@ const Messages = () => {
       messages?.forEach((msg: any) => {
         const partnerId = msg.from_user_id === userId ? msg.to_user_id : msg.from_user_id;
         const partnerProfile = profileMap.get(partnerId);
+        const partnerRole = roleMap.get(partnerId);
         
         if (!conversationMap.has(partnerId)) {
           conversationMap.set(partnerId, {
@@ -91,6 +100,7 @@ const Messages = () => {
             username: partnerProfile?.username || "Kullanıcı",
             avatar_url: partnerProfile?.avatar_url,
             total_sales: partnerProfile?.total_sales,
+            role: partnerRole || null,
             last_message: msg.body,
             last_message_time: msg.created_at,
             unread_count: 0,
@@ -148,14 +158,21 @@ const Messages = () => {
     queryKey: ["userProfile", selectedConversation],
     enabled: !!selectedConversation,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("username, avatar_url, total_sales")
         .eq("user_id", selectedConversation)
         .maybeSingle();
       
-      if (error) throw error;
-      return data;
+      if (profileError) throw profileError;
+
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", selectedConversation)
+        .maybeSingle();
+      
+      return { ...profileData, role: roleData?.role };
     },
   });
 
@@ -272,6 +289,14 @@ const Messages = () => {
                               <p className="font-medium truncate">
                                 {conv.username}
                               </p>
+                              {conv.role === 'admin' && (
+                                <img 
+                                  src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                                  alt="Admin Rozeti" 
+                                  className="w-4 h-4 flex-shrink-0"
+                                  title="Admin"
+                                />
+                              )}
                               {(conv.total_sales ?? 0) > 0 && (
                                 <img 
                                   src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
@@ -317,6 +342,14 @@ const Messages = () => {
                         <p className="font-medium">
                           {selectedConversationData?.username || selectedUserProfile?.username || "Kullanıcı"}
                         </p>
+                        {(selectedConversationData?.role === 'admin' || selectedUserProfile?.role === 'admin') && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                            alt="Admin Rozeti" 
+                            className="w-5 h-5"
+                            title="Admin"
+                          />
+                        )}
                         {((selectedConversationData?.total_sales ?? selectedUserProfile?.total_sales ?? 0) > 0) && (
                           <img 
                             src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
