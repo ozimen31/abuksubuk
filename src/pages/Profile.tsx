@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -6,12 +6,20 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Star, Package, Wallet, LogOut, User } from "lucide-react";
-import { useEffect } from "react";
+import { Star, Package, Wallet, LogOut, User, Upload, Edit } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -53,10 +61,97 @@ const Profile = () => {
     }
   }, [session, navigate]);
 
+  useEffect(() => {
+    if (profile?.username) {
+      setNewUsername(profile.username);
+    }
+  }, [profile?.username]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+
+  const updateUsernameMutation = useMutation({
+    mutationFn: async (username: string) => {
+      if (!session?.user?.id) throw new Error("No user session");
+      
+      if (profile?.username_changed_at) {
+        throw new Error("Kullanıcı adını sadece bir kez değiştirebilirsiniz");
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ 
+          username,
+          username_changed_at: new Date().toISOString()
+        })
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setEditingUsername(false);
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı adınız güncellendi",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !session?.user?.id) return;
+
+    setUploadingAvatar(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('listings')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('listings')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", session.user.id);
+
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: "Başarılı",
+        description: "Profil fotoğrafınız güncellendi",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Fotoğraf yüklenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const canChangeUsername = !profile?.username_changed_at;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,13 +167,74 @@ const Profile = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center text-center">
-                  <Avatar className="w-24 h-24 mb-4">
-                    <AvatarImage src={profile?.avatar_url} />
-                    <AvatarFallback className="bg-brand-blue/10">
-                      <User className="w-12 h-12 text-brand-blue" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-bold text-xl mb-1">{profile?.username || "Kullanıcı"}</h3>
+                  <div className="relative mb-4">
+                    <Avatar className="w-24 h-24">
+                      <AvatarImage src={profile?.avatar_url} />
+                      <AvatarFallback className="bg-brand-blue/10">
+                        <User className="w-12 h-12 text-brand-blue" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-brand-blue text-white p-2 rounded-full cursor-pointer hover:bg-brand-blue/90 transition-colors">
+                      <Upload className="w-4 h-4" />
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                      />
+                    </label>
+                  </div>
+
+                  {editingUsername && canChangeUsername ? (
+                    <div className="w-full space-y-2">
+                      <Input
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        placeholder="Kullanıcı adı"
+                        className="text-center"
+                      />
+                      <div className="flex gap-2 justify-center">
+                        <Button
+                          size="sm"
+                          onClick={() => updateUsernameMutation.mutate(newUsername)}
+                          disabled={updateUsernameMutation.isPending}
+                        >
+                          Kaydet
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingUsername(false)}
+                        >
+                          İptal
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-xl">{profile?.username || "Kullanıcı"}</h3>
+                        {canChangeUsername && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingUsername(true)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                      {!canChangeUsername && (
+                        <p className="text-xs text-muted-foreground">
+                          Kullanıcı adı değiştirildi
+                        </p>
+                      )}
+                    </>
+                  )}
+                  
                   <p className="text-sm text-muted-foreground mb-3">{session?.user?.email}</p>
                   {profile?.verified && (
                     <Badge className="bg-success-green/10 text-success-green">

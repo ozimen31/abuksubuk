@@ -350,7 +350,8 @@ export type Database = {
           total_sales: number | null
           updated_at: string | null
           user_id: string
-          username: string | null
+          username: string
+          username_changed_at: string | null
           verified: boolean | null
         }
         Insert: {
@@ -368,7 +369,8 @@ export type Database = {
           total_sales?: number | null
           updated_at?: string | null
           user_id: string
-          username?: string | null
+          username: string
+          username_changed_at?: string | null
           verified?: boolean | null
         }
         Update: {
@@ -386,7 +388,8 @@ export type Database = {
           total_sales?: number | null
           updated_at?: string | null
           user_id?: string
-          username?: string | null
+          username?: string
+          username_changed_at?: string | null
           verified?: boolean | null
         }
         Relationships: []
