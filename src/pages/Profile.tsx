@@ -213,26 +213,19 @@ const Profile = () => {
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-xl">{profile?.username || "Kullanıcı"}</h3>
-                        {canChangeUsername && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingUsername(true)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
-                      {!canChangeUsername && (
-                        <p className="text-xs text-muted-foreground">
-                          Kullanıcı adı değiştirildi
-                        </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-xl">{profile?.username || "Kullanıcı"}</h3>
+                      {canChangeUsername && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingUsername(true)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
                       )}
-                    </>
+                    </div>
                   )}
                   
                   <p className="text-sm text-muted-foreground mb-3">{session?.user?.email}</p>
