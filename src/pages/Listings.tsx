@@ -98,6 +98,9 @@ const Listings = () => {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
+        {/* SEO H1 */}
+        <h1 className="sr-only">Oyun Hesabı İlanları - Steam, Valorant, LOL ve Daha Fazlası</h1>
+        
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-64 space-y-6">

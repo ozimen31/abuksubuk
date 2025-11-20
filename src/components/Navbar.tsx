@@ -3,34 +3,44 @@ import { User, Menu, X, Wallet, MessageSquare, Package, HelpCircle } from "lucid
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Session } from "@supabase/supabase-js";
+
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
-  const {
-    data: session
-  } = useQuery({
-    queryKey: ["session"],
-    queryFn: async () => {
-      const {
-        data
-      } = await supabase.auth.getSession();
-      return data.session;
-    }
-  });
-  const {
-    data: profile
-  } = useQuery({
+  const queryClient = useQueryClient();
+
+  const { data: profile } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
-      const {
-        data
-      } = await supabase.from("profiles").select("*").eq("user_id", session!.user.id).single();
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", session!.user.id)
+        .single();
       return data;
     }
   });
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
