@@ -345,7 +345,10 @@ export type Database = {
           description: string | null
           id: string
           is_banned: boolean | null
+          last_login_at: string | null
+          last_login_ip: unknown
           phone: string | null
+          registration_ip: unknown
           seller_score: number | null
           total_sales: number | null
           updated_at: string | null
@@ -364,7 +367,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          last_login_at?: string | null
+          last_login_ip?: unknown
           phone?: string | null
+          registration_ip?: unknown
           seller_score?: number | null
           total_sales?: number | null
           updated_at?: string | null
@@ -383,7 +389,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_banned?: boolean | null
+          last_login_at?: string | null
+          last_login_ip?: unknown
           phone?: string | null
+          registration_ip?: unknown
           seller_score?: number | null
           total_sales?: number | null
           updated_at?: string | null

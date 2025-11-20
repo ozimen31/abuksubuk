@@ -262,6 +262,8 @@ const UsersTab = () => {
                   <TableHead>Durum</TableHead>
                   <TableHead>Bakiye</TableHead>
                   <TableHead>Satışlar</TableHead>
+                  <TableHead>Kayıt IP</TableHead>
+                  <TableHead>Son Giriş IP</TableHead>
                   <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
@@ -285,6 +287,12 @@ const UsersTab = () => {
                       </TableCell>
                       <TableCell>₺{user.balance?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>{user.total_sales || 0}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {(user as any).registration_ip || "-"}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {(user as any).last_login_ip || "-"}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Select
@@ -337,7 +345,7 @@ const UsersTab = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       Kullanıcı bulunamadı
                     </TableCell>
                   </TableRow>

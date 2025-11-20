@@ -20,7 +20,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -35,6 +35,17 @@ const Auth = () => {
         variant: "destructive",
       });
     } else {
+      // Track IP address for signup
+      if (data.session) {
+        try {
+          await supabase.functions.invoke('track-login', {
+            body: { type: 'signup' },
+          });
+        } catch (err) {
+          console.error('Failed to track signup IP:', err);
+        }
+      }
+
       toast({
         title: "Başarılı!",
         description: "Kayıt işlemi tamamlandı. Giriş yapabilirsiniz.",
@@ -47,7 +58,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -59,6 +70,17 @@ const Auth = () => {
         variant: "destructive",
       });
     } else {
+      // Track IP address for login
+      if (data.session) {
+        try {
+          await supabase.functions.invoke('track-login', {
+            body: { type: 'login' },
+          });
+        } catch (err) {
+          console.error('Failed to track login IP:', err);
+        }
+      }
+
       toast({
         title: "Hoş geldiniz!",
         description: "Başarıyla giriş yaptınız.",
