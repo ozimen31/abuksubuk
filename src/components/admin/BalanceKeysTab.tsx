@@ -24,6 +24,20 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+interface BalanceKeyWithUsername {
+  id: string;
+  key_code: string;
+  amount: number;
+  description: string | null;
+  used: boolean;
+  used_by: string | null;
+  used_by_username?: string;
+  expires_at: string | null;
+  created_at: string;
+  created_by: string;
+  used_at: string | null;
+}
+
 const BalanceKeysTab = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,7 +45,6 @@ const BalanceKeysTab = () => {
   const [formData, setFormData] = useState({
     amount: "",
     description: "",
-    expires_at: "",
   });
 
   const { data: session } = useQuery({
@@ -42,16 +55,31 @@ const BalanceKeysTab = () => {
     },
   });
 
-  const { data: keys, isLoading } = useQuery({
+  const { data: keys, isLoading } = useQuery<BalanceKeyWithUsername[]>({
     queryKey: ["admin-balance-keys"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: keysData, error } = await supabase
         .from("balance_keys")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      if (!keysData) return [];
+
+      // Get profiles for used_by users
+      const usedByIds = keysData.filter(k => k.used_by).map(k => k.used_by);
+      if (usedByIds.length === 0) return keysData;
+
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, username")
+        .in("user_id", usedByIds);
+
+      // Merge data
+      return keysData.map(key => ({
+        ...key,
+        used_by_username: profilesData?.find(p => p.user_id === key.used_by)?.username
+      }));
     },
   });
 
@@ -65,7 +93,6 @@ const BalanceKeysTab = () => {
         key_code: keyCode,
         amount: parseFloat(data.amount),
         description: data.description || null,
-        expires_at: data.expires_at || null,
         created_by: session.user.id,
       });
       
@@ -94,7 +121,6 @@ const BalanceKeysTab = () => {
     setFormData({
       amount: "",
       description: "",
-      expires_at: "",
     });
   };
 
@@ -166,15 +192,6 @@ const BalanceKeysTab = () => {
                     placeholder="Promosyon anahtarı..."
                   />
                 </div>
-                <div>
-                  <Label htmlFor="expires_at">Son Kullanma Tarihi (İsteğe Bağlı)</Label>
-                  <Input
-                    id="expires_at"
-                    type="datetime-local"
-                    value={formData.expires_at}
-                    onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                  />
-                </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1">
                     Oluştur
@@ -203,7 +220,7 @@ const BalanceKeysTab = () => {
                   <TableHead>Tutar</TableHead>
                   <TableHead>Açıklama</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead>Son Kullanma</TableHead>
+                  <TableHead>Kullanan Kullanıcı</TableHead>
                   <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
@@ -224,9 +241,13 @@ const BalanceKeysTab = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {key.expires_at
-                          ? new Date(key.expires_at).toLocaleDateString("tr-TR")
-                          : "Süresiz"}
+                        {key.used && key.used_by_username ? (
+                          <span className="font-medium">@{key.used_by_username}</span>
+                        ) : key.used ? (
+                          <span className="text-muted-foreground">Kullanıcı bulunamadı</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
