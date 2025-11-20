@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Star, Eye, Package, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Listings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000]);
@@ -27,6 +28,17 @@ const Listings = () => {
       return data;
     },
   });
+
+  // Set category from URL parameter
+  useEffect(() => {
+    const categorySlug = searchParams.get("category");
+    if (categorySlug && categories) {
+      const category = categories.find(c => c.slug === categorySlug);
+      if (category) {
+        setSelectedCategory(category.id);
+      }
+    }
+  }, [searchParams, categories]);
 
   const { data: listings, isLoading } = useQuery({
     queryKey: ["listings", searchQuery, selectedCategory, priceRange, sortBy],

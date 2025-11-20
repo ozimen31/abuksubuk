@@ -217,13 +217,16 @@ const CategoriesTab = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="icon">İkon (Lucide icon adı)</Label>
+                  <Label htmlFor="icon">Görsel URL</Label>
                   <Input
                     id="icon"
                     value={formData.icon}
                     onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    placeholder="Gamepad2"
+                    placeholder="https://example.com/logo.png"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Kategori görseli için tam URL girin
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="order">Sıra</Label>
