@@ -43,13 +43,20 @@ const ListingDetail = () => {
         .eq("id", listingData.category_id)
         .maybeSingle();
 
+      // Fetch seller role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", listingData.user_id)
+        .maybeSingle();
+
       // Increment view count
       await supabase
         .from("listings")
         .update({ view_count: (listingData.view_count || 0) + 1 })
         .eq("id", id);
 
-      return { ...listingData, profile: profileData, category: categoryData };
+      return { ...listingData, profile: profileData, category: categoryData, seller_role: roleData };
     },
   });
 
@@ -434,6 +441,14 @@ const ListingDetail = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-medium">{listing.profile?.username || "Kullanıcı"}</p>
+                        {listing.seller_role?.role === 'admin' && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                            alt="Admin Rozeti" 
+                            className="w-5 h-5"
+                            title="Admin"
+                          />
+                        )}
                         {(listing.profile?.total_sales ?? 0) > 0 && (
                           <img 
                             src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
