@@ -89,7 +89,7 @@ const CreateListing = () => {
       const filePath = `${session?.user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('listing-images')
+        .from('listings')
         .upload(filePath, file);
 
       if (uploadError) {
@@ -98,7 +98,7 @@ const CreateListing = () => {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('listing-images')
+        .from('listings')
         .getPublicUrl(filePath);
 
       uploadedUrls.push(publicUrl);
