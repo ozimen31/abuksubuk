@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Star, Eye, Package, Search } from "lucide-react";
+import { Star, Eye, Package, Search, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Listings = () => {
   const navigate = useNavigate();
@@ -76,12 +77,18 @@ const Listings = () => {
       const userIds = data?.map((l) => l.user_id) || [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, username, seller_score")
+        .select("user_id, username, seller_score, avatar_url, total_sales")
+        .in("user_id", userIds);
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
         .in("user_id", userIds);
 
       return data?.map((listing) => ({
         ...listing,
         profile: profiles?.find((p) => p.user_id === listing.user_id),
+        seller_role: roles?.find((r) => r.user_id === listing.user_id)?.role,
       }));
     },
   });
@@ -213,9 +220,35 @@ const Listings = () => {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg line-clamp-2">{listing.title}</CardTitle>
                       <CardDescription className="flex items-center gap-2">
-                        <Star className="w-4 h-4 fill-success-green text-success-green" />
-                        <span>{Number(listing.profile?.seller_score || 0).toFixed(2)}</span>
+                        <Avatar className="w-5 h-5">
+                          {listing.profile?.avatar_url && (
+                            <AvatarImage src={listing.profile.avatar_url} />
+                          )}
+                          <AvatarFallback>
+                            <User className="w-3 h-3" />
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="text-xs">@{listing.profile?.username || "kullanıcı"}</span>
+                        {listing.seller_role === 'admin' && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                            alt="Admin" 
+                            className="w-4 h-4"
+                            title="Admin"
+                          />
+                        )}
+                        {listing.profile && listing.profile.total_sales > 0 && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                            alt="İlk Satış" 
+                            className="w-4 h-4"
+                            title="İlk Satış"
+                          />
+                        )}
+                        <div className="flex items-center gap-1 ml-auto">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span>{Number(listing.profile?.seller_score || 0).toFixed(1)}</span>
+                        </div>
                       </CardDescription>
                     </CardHeader>
 

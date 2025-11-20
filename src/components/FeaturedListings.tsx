@@ -21,7 +21,9 @@ interface ListingWithProfile {
     seller_score: number;
     username: string;
     avatar_url: string | null;
+    total_sales: number;
   };
+  seller_role?: string | null;
 }
 
 const FeaturedListings = () => {
@@ -45,19 +47,28 @@ const FeaturedListings = () => {
       const userIds = listingsData.map(l => l.user_id);
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, username, seller_score, avatar_url")
+        .select("user_id, username, seller_score, avatar_url, total_sales")
+        .in("user_id", userIds);
+
+      // Get user roles for these listings
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
         .in("user_id", userIds);
 
       // Merge data
       const enrichedListings: ListingWithProfile[] = listingsData.map(listing => {
         const profile = profilesData?.find(p => p.user_id === listing.user_id);
+        const userRole = rolesData?.find(r => r.user_id === listing.user_id);
         return {
           ...listing,
           profile: profile ? {
             username: profile.username,
             seller_score: profile.seller_score || 0,
             avatar_url: profile.avatar_url,
+            total_sales: profile.total_sales || 0,
           } : undefined,
+          seller_role: userRole?.role || null,
         };
       });
 
@@ -123,7 +134,7 @@ const FeaturedListings = () => {
               {listing.title}
             </h3>
 
-            <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
               <Avatar className="w-5 h-5">
                 {listing.profile?.avatar_url && (
                   <AvatarImage src={listing.profile.avatar_url} />
@@ -132,10 +143,26 @@ const FeaturedListings = () => {
                   <User className="w-3 h-3" />
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">{listing.profile?.username || 'Unknown'}</span>
-              <div className="flex items-center gap-1">
+              <span className="truncate">{listing.profile?.username || 'Kullanıcı'}</span>
+              {listing.seller_role === 'admin' && (
+                <img 
+                  src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                  alt="Admin" 
+                  className="w-4 h-4"
+                  title="Admin"
+                />
+              )}
+              {listing.profile && listing.profile.total_sales > 0 && (
+                <img 
+                  src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                  alt="İlk Satış" 
+                  className="w-4 h-4"
+                  title="İlk Satış"
+                />
+              )}
+              <div className="flex items-center gap-0.5 ml-auto">
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <span>{listing.profile?.seller_score || 0}</span>
+                <span>{Number(listing.profile?.seller_score || 0).toFixed(1)}</span>
               </div>
             </div>
 
