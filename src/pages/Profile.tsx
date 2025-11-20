@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Star, Package, Wallet, LogOut, User, Upload, Edit, ShoppingBag } from "lucide-react";
+import { Loader2, User, Star, Package, Mail, CheckCircle, ShoppingCart, Wallet, LogOut, Upload, Pencil, Check, X, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -267,7 +267,7 @@ const Profile = () => {
                           onClick={() => setEditingUsername(true)}
                           className="h-6 w-6 p-0"
                         >
-                          <Edit className="w-3 h-3" />
+                          <Pencil className="w-3 h-3" />
                         </Button>
                       )}
                     </div>
@@ -311,8 +311,16 @@ const Profile = () => {
                     variant="outline"
                     className="w-full justify-start"
                   >
-                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    <ShoppingCart className="w-4 h-4 mr-2" />
                     Siparişlerim
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/verify-account")}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Hesabımı Doğrula
                   </Button>
                   <Button
                     onClick={() => navigate("/wallet")}

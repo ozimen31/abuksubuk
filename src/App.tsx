@@ -20,6 +20,7 @@ import Messages from "./pages/Messages";
 import Support from "./pages/Support";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
+import VerifyAccount from "./pages/VerifyAccount";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +66,7 @@ const AppContent = () => {
           <Route path="/withdraw" element={<Withdraw />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
           <Route path="/admin" element={<AdminPanel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

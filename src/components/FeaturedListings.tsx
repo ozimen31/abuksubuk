@@ -22,6 +22,7 @@ interface ListingWithProfile {
     username: string;
     avatar_url: string | null;
     total_sales: number;
+    is_verified: boolean | null;
   };
   seller_role?: string | null;
 }
@@ -47,7 +48,7 @@ const FeaturedListings = () => {
       const userIds = listingsData.map(l => l.user_id);
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, username, seller_score, avatar_url, total_sales")
+        .select("user_id, username, seller_score, avatar_url, total_sales, is_verified")
         .in("user_id", userIds);
 
       // Get user roles for these listings
@@ -67,6 +68,7 @@ const FeaturedListings = () => {
             seller_score: profile.seller_score || 0,
             avatar_url: profile.avatar_url,
             total_sales: profile.total_sales || 0,
+            is_verified: profile.is_verified || false,
           } : undefined,
           seller_role: userRole?.role || null,
         };
@@ -144,6 +146,14 @@ const FeaturedListings = () => {
                 </AvatarFallback>
               </Avatar>
               <span className="truncate">{listing.profile?.username || 'Kullanıcı'}</span>
+              {listing.profile?.is_verified && (
+                <img 
+                  src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
+                  alt="Verified" 
+                  className="w-4 h-4"
+                  title="Doğrulanmış Hesap"
+                />
+              )}
               {listing.seller_role === 'admin' && (
                 <img 
                   src="https://cdn.itemsatis.com/uploads/medals/60760ea5cd37a-medals-2644af7bc00efe5566a2154da9c32c4fc8f643fa.png" 
