@@ -13,6 +13,9 @@ const Index = () => {
       <AnnouncementBanner />
       <Navbar />
       
+      {/* SEO H1 - Hidden but accessible to search engines */}
+      <h1 className="sr-only">Hesap Market - Türkiye'nin En Güvenilir Oyun Hesabı Alım Satım Platformu</h1>
+      
       {/* Hero Slider */}
       <section className="relative bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16">
         <div className="container mx-auto px-4">
