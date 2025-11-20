@@ -53,6 +53,69 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_ips: {
+        Row: {
+          banned_at: string | null
+          banned_by: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string
+          reason: string | null
+        }
+        Insert: {
+          banned_at?: string | null
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address: string
+          reason?: string | null
+        }
+        Update: {
+          banned_at?: string | null
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      banned_users: {
+        Row: {
+          banned_at: string | null
+          banned_by: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string | null
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          banned_at?: string | null
+          banned_by?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           active: boolean | null
@@ -281,6 +344,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          is_banned: boolean | null
           phone: string | null
           seller_score: number | null
           total_sales: number | null
@@ -298,6 +362,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_banned?: boolean | null
           phone?: string | null
           seller_score?: number | null
           total_sales?: number | null
@@ -315,6 +380,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_banned?: boolean | null
           phone?: string | null
           seller_score?: number | null
           total_sales?: number | null
@@ -637,6 +703,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_ip_banned: { Args: { ip: string }; Returns: boolean }
+      is_user_banned: { Args: { user_uuid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

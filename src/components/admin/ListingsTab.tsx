@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Eye, Trash2 } from "lucide-react";
+import { Search, Eye, Trash2, Edit, Pause, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ListingsTab = () => {
@@ -41,7 +41,7 @@ const ListingsTab = () => {
           categories (name),
           profiles!listings_user_id_fkey (username)
         `)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false});
 
       if (error) throw error;
       return data;
@@ -125,7 +125,7 @@ const ListingsTab = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="İlan ara..."
+                placeholder="İlan başlığı ile ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -133,14 +133,14 @@ const ListingsTab = () => {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue />
+                <SelectValue placeholder="Durum" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Durumlar</SelectItem>
                 <SelectItem value="active">Aktif</SelectItem>
                 <SelectItem value="draft">Taslak</SelectItem>
-                <SelectItem value="sold">Satıldı</SelectItem>
                 <SelectItem value="paused">Duraklatıldı</SelectItem>
+                <SelectItem value="sold">Satıldı</SelectItem>
                 <SelectItem value="rejected">Reddedildi</SelectItem>
               </SelectContent>
             </Select>
@@ -150,12 +150,13 @@ const ListingsTab = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Başlık</TableHead>
-                  <TableHead>Satıcı</TableHead>
+                  <TableHead>İlan Başlığı</TableHead>
                   <TableHead>Kategori</TableHead>
+                  <TableHead>Satıcı</TableHead>
                   <TableHead>Fiyat</TableHead>
-                  <TableHead>Durum</TableHead>
+                  <TableHead>Stok</TableHead>
                   <TableHead>Görüntülenme</TableHead>
+                  <TableHead>Durum</TableHead>
                   <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
@@ -163,45 +164,61 @@ const ListingsTab = () => {
                 {filteredListings && filteredListings.length > 0 ? (
                   filteredListings.map((listing: any) => (
                     <TableRow key={listing.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">
-                        {listing.title}
-                      </TableCell>
-                      <TableCell>{listing.profiles?.username || "Anonim"}</TableCell>
-                      <TableCell>{listing.categories?.name || "-"}</TableCell>
-                      <TableCell>{listing.price} ₺</TableCell>
-                      <TableCell>{getStatusBadge(listing.status)}</TableCell>
+                      <TableCell className="font-medium">{listing.title}</TableCell>
+                      <TableCell>{(listing.categories as any)?.name || "-"}</TableCell>
+                      <TableCell>{(listing.profiles as any)?.username || "-"}</TableCell>
+                      <TableCell>₺{listing.price}</TableCell>
+                      <TableCell>{listing.stock || 0}</TableCell>
                       <TableCell>{listing.view_count || 0}</TableCell>
+                      <TableCell>{getStatusBadge(listing.status || "draft")}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/listing/${listing.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
                           <Select
-                            value={listing.status}
+                            value={listing.status || "draft"}
                             onValueChange={(value) =>
                               updateStatusMutation.mutate({ id: listing.id, status: value })
                             }
                           >
-                            <SelectTrigger className="w-[120px]">
+                            <SelectTrigger className="w-[130px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="active">Aktif</SelectItem>
                               <SelectItem value="draft">Taslak</SelectItem>
+                              <SelectItem value="paused">Duraklatıldı</SelectItem>
                               <SelectItem value="sold">Satıldı</SelectItem>
-                              <SelectItem value="paused">Duraklat</SelectItem>
-                              <SelectItem value="rejected">Reddet</SelectItem>
+                              <SelectItem value="rejected">Reddedildi</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button
+                            variant="outline"
                             size="sm"
+                            onClick={() => navigate(`/listing/${listing.id}`)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/edit-listing/${listing.id}`)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateStatusMutation.mutate({ 
+                              id: listing.id, 
+                              status: listing.status === "paused" ? "active" : "paused" 
+                            })}
+                          >
+                            {listing.status === "paused" ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                          </Button>
+                          <Button
                             variant="destructive"
+                            size="sm"
                             onClick={() => {
-                              if (window.confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
+                              if (confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
                                 deleteMutation.mutate(listing.id);
                               }
                             }}
@@ -214,7 +231,7 @@ const ListingsTab = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       İlan bulunamadı
                     </TableCell>
                   </TableRow>
