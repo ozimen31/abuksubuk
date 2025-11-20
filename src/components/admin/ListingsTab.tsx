@@ -34,17 +34,34 @@ const ListingsTab = () => {
   const { data: listings, isLoading } = useQuery({
     queryKey: ["admin-listings"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: listingsData, error } = await supabase
         .from("listings")
-        .select(`
-          *,
-          categories (name),
-          profiles!listings_user_id_fkey (username)
-        `)
-        .order("created_at", { ascending: false});
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      if (!listingsData) return [];
+
+      // Get categories
+      const categoryIds = [...new Set(listingsData.map(l => l.category_id).filter(Boolean))];
+      const { data: categoriesData } = await supabase
+        .from("categories")
+        .select("id, name")
+        .in("id", categoryIds);
+
+      // Get profiles
+      const userIds = listingsData.map(l => l.user_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, username")
+        .in("user_id", userIds);
+
+      // Merge data
+      return listingsData.map(listing => ({
+        ...listing,
+        categories: categoriesData?.find(c => c.id === listing.category_id) || { name: 'Yok' },
+        profiles: profilesData?.find(p => p.user_id === listing.user_id) || { username: 'Bilinmeyen' }
+      }));
     },
   });
 
