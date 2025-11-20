@@ -15,6 +15,9 @@ const Withdraw = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankAccountHolder, setBankAccountHolder] = useState("");
+  const [bankIban, setBankIban] = useState("");
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -33,6 +36,14 @@ const Withdraw = () => {
         .select("*")
         .eq("user_id", session!.user.id)
         .maybeSingle();
+      
+      // Auto-fill bank details if available
+      if (data) {
+        setBankName(data.bank_name || "");
+        setBankAccountHolder(data.bank_account_holder || "");
+        setBankIban(data.bank_iban || "");
+      }
+      
       return data;
     },
   });
@@ -48,6 +59,26 @@ const Withdraw = () => {
       toast({
         title: "Hata",
         description: "Geçerli bir tutar girin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!bankName || !bankAccountHolder || !bankIban) {
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm banka bilgilerini doldurun",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic IBAN validation (TR + 24 digits)
+    const ibanClean = bankIban.replace(/\s/g, '').toUpperCase();
+    if (!ibanClean.startsWith('TR') || ibanClean.length !== 26) {
+      toast({
+        title: "Hata",
+        description: "Geçerli bir TR IBAN giriniz (TR + 24 hane)",
         variant: "destructive",
       });
       return;
@@ -72,10 +103,24 @@ const Withdraw = () => {
     }
 
     try {
+      // First update bank details in profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          bank_name: bankName,
+          bank_account_holder: bankAccountHolder,
+          bank_iban: ibanClean,
+        })
+        .eq("user_id", session!.user.id);
+
+      if (profileError) throw profileError;
+
+      // Then create withdrawal request
       const { error } = await supabase.from("withdrawals").insert({
         user_id: session!.user.id,
         amount: parseFloat(withdrawAmount),
         status: "pending",
+        notes: `Banka: ${bankName}\nHesap Sahibi: ${bankAccountHolder}\nIBAN: ${ibanClean}`,
       });
 
       if (error) throw error;
@@ -129,7 +174,50 @@ const Withdraw = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="withdraw-amount">Çekilecek Tutar (₺)</Label>
+              <Label htmlFor="bank-name">Banka Adı *</Label>
+              <Input
+                id="bank-name"
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                placeholder="Örn: Ziraat Bankası"
+                className="bg-dark-surface border-glass-border"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="account-holder">Hesap Sahibi Adı *</Label>
+              <Input
+                id="account-holder"
+                type="text"
+                value={bankAccountHolder}
+                onChange={(e) => setBankAccountHolder(e.target.value)}
+                placeholder="Ad Soyad"
+                className="bg-dark-surface border-glass-border"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="iban">IBAN *</Label>
+              <Input
+                id="iban"
+                type="text"
+                value={bankIban}
+                onChange={(e) => setBankIban(e.target.value)}
+                placeholder="TR00 0000 0000 0000 0000 0000 00"
+                className="bg-dark-surface border-glass-border font-mono"
+                maxLength={32}
+                required
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                IBAN numaranızı boşluklu veya boşluksuz girebilirsiniz
+              </p>
+            </div>
+
+            <div className="border-t border-glass-border pt-4">
+              <Label htmlFor="withdraw-amount">Çekilecek Tutar (₺) *</Label>
               <Input
                 id="withdraw-amount"
                 type="number"
@@ -138,6 +226,7 @@ const Withdraw = () => {
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 placeholder="0.00"
                 className="bg-dark-surface border-glass-border"
+                required
               />
             </div>
 
@@ -147,8 +236,7 @@ const Withdraw = () => {
                 Maksimum çekilebilir: ₺{Number(profile?.balance || 0).toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                💡 Çekim işlemleri banka hesabınıza yapılacaktır. Profil bilgilerinizden banka
-                bilgilerinizi güncelleyebilirsiniz.
+                💡 Banka bilgileriniz güvenli şekilde kaydedilir ve sonraki çekimlerde otomatik doldurulur.
               </p>
             </div>
 
