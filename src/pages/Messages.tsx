@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -259,8 +259,9 @@ const Messages = () => {
                     >
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarFallback>
-                            <User className="w-4 h-4" />
+                          <AvatarImage src={conv.avatar_url || undefined} />
+                          <AvatarFallback className="bg-brand-blue/10">
+                            <User className="w-4 h-4 text-brand-blue" />
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -294,8 +295,9 @@ const Messages = () => {
                 <div className="p-4 border-b border-glass-border">
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarFallback>
-                        <User className="w-4 h-4" />
+                      <AvatarImage src={selectedConversationData?.avatar_url || selectedUserProfile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-brand-blue/10">
+                        <User className="w-4 h-4 text-brand-blue" />
                       </AvatarFallback>
                     </Avatar>
                     <div>
