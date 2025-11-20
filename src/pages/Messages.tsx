@@ -16,6 +16,7 @@ interface Conversation {
   user_id: string;
   username: string;
   avatar_url: string | null;
+  total_sales: number | null;
   last_message: string;
   last_message_time: string;
   unread_count: number;
@@ -72,7 +73,7 @@ const Messages = () => {
       // Fetch all user profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, username, avatar_url")
+        .select("user_id, username, avatar_url, total_sales")
         .in("user_id", Array.from(userIds));
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]));
@@ -89,6 +90,7 @@ const Messages = () => {
             user_id: partnerId,
             username: partnerProfile?.username || "Kullanıcı",
             avatar_url: partnerProfile?.avatar_url,
+            total_sales: partnerProfile?.total_sales,
             last_message: msg.body,
             last_message_time: msg.created_at,
             unread_count: 0,
@@ -148,7 +150,7 @@ const Messages = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, total_sales")
         .eq("user_id", selectedConversation)
         .maybeSingle();
       
@@ -266,9 +268,19 @@ const Messages = () => {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <p className="font-medium truncate">
-                              {conv.username}
-                            </p>
+                            <div className="flex items-center gap-1">
+                              <p className="font-medium truncate">
+                                {conv.username}
+                              </p>
+                              {(conv.total_sales ?? 0) > 0 && (
+                                <img 
+                                  src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                                  alt="İlk Satış Rozeti" 
+                                  className="w-4 h-4 flex-shrink-0"
+                                  title="İlk satışını yaptı!"
+                                />
+                              )}
+                            </div>
                             {conv.unread_count > 0 && (
                               <span className="bg-brand-blue text-white text-xs px-2 py-0.5 rounded-full">
                                 {conv.unread_count}
@@ -301,9 +313,19 @@ const Messages = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">
-                        {selectedConversationData?.username || selectedUserProfile?.username || "Kullanıcı"}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">
+                          {selectedConversationData?.username || selectedUserProfile?.username || "Kullanıcı"}
+                        </p>
+                        {((selectedConversationData?.total_sales ?? selectedUserProfile?.total_sales ?? 0) > 0) && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                            alt="İlk Satış Rozeti" 
+                            className="w-5 h-5"
+                            title="İlk satışını yaptı!"
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

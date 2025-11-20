@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Package, Eye, FileText, ShoppingBag } from "lucide-react";
 import { useEffect } from "react";
 import { format } from "date-fns";
+import { ReviewDialog } from "@/components/ReviewDialog";
 
 interface OrderWithDetails {
   id: string;
@@ -16,6 +17,7 @@ interface OrderWithDetails {
   price: number;
   status: string;
   delivery_note: string | null;
+  seller_id: string;
   listing: {
     id: string;
     title: string;
@@ -25,6 +27,11 @@ interface OrderWithDetails {
   } | null;
   seller_profile: {
     username: string;
+    total_sales: number | null;
+  } | null;
+  review: {
+    rating: number;
+    comment: string | null;
   } | null;
 }
 
@@ -71,17 +78,27 @@ const Orders = () => {
       const sellerIds = ordersData.map(o => o.seller_id);
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("user_id, username")
+        .select("user_id, username, total_sales")
         .in("user_id", sellerIds);
+
+      // Fetch reviews for these orders
+      const orderIds = ordersData.map(o => o.id);
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select("order_id, rating, comment")
+        .in("order_id", orderIds)
+        .eq("reviewer_id", session!.user.id);
 
       // Merge data
       const enrichedOrders: OrderWithDetails[] = ordersData.map(order => {
         const listing = listingsData?.find(l => l.id === order.listing_id);
         const seller_profile = profilesData?.find(p => p.user_id === order.seller_id);
+        const review = reviewsData?.find(r => r.order_id === order.id);
         return {
           ...order,
           listing: listing || null,
           seller_profile: seller_profile || null,
+          review: review || null,
         };
       });
 
@@ -175,9 +192,17 @@ const Orders = () => {
                         <CardTitle className="text-lg mb-1">
                           {order.listing?.title || "İlan Bulunamadı"}
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Satıcı: @{order.seller_profile?.username || "kullanıcı"}
-                        </p>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                          <span>Satıcı: @{order.seller_profile?.username || "kullanıcı"}</span>
+                          {(order.seller_profile?.total_sales ?? 0) > 0 && (
+                            <img 
+                              src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                              alt="İlk Satış Rozeti" 
+                              className="w-4 h-4"
+                              title="İlk satışını yaptı!"
+                            />
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(order.created_at), "dd MMM yyyy, HH:mm")}
                         </p>
@@ -245,6 +270,18 @@ const Orders = () => {
                       Satıcıya Mesaj Gönder
                     </Button>
                   </div>
+
+                  {/* Review Button */}
+                  {(order.status === 'completed' || order.status === 'delivered') && order.seller_profile && (
+                    <div className="pt-2 border-t border-glass-border">
+                      <ReviewDialog
+                        orderId={order.id}
+                        sellerId={order.seller_id}
+                        sellerUsername={order.seller_profile.username}
+                        existingReview={order.review}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

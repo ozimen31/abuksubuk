@@ -55,6 +55,22 @@ const Profile = () => {
     },
   });
 
+  const { data: reviews } = useQuery({
+    queryKey: ["user-reviews", session?.user?.id],
+    enabled: !!session?.user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select(`
+          *,
+          reviewer:profiles!reviews_reviewer_id_fkey(username, avatar_url)
+        `)
+        .eq("reviewed_user_id", session!.user.id)
+        .order("created_at", { ascending: false });
+      return data;
+    },
+  });
+
   useEffect(() => {
     if (!session) {
       navigate("/auth");
@@ -215,6 +231,14 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-xl">{profile?.username || "Kullanıcı"}</h3>
+                      {(profile?.total_sales ?? 0) > 0 && (
+                        <img 
+                          src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                          alt="İlk Satış Rozeti" 
+                          className="w-6 h-6"
+                          title="İlk satışını yaptı!"
+                        />
+                      )}
                       {canChangeUsername && (
                         <Button
                           size="sm"
@@ -328,6 +352,62 @@ const Profile = () => {
                     >
                       İlan Oluştur
                     </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Reviews */}
+            <Card className="border-glass-border bg-card/50 backdrop-blur-sm mt-6">
+              <CardHeader>
+                <CardTitle>Değerlendirmeler</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {reviews && reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.slice(0, 5).map((review: any) => (
+                      <div
+                        key={review.id}
+                        className="p-4 rounded-lg bg-dark-surface/50 border border-glass-border"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage src={review.reviewer?.avatar_url} />
+                              <AvatarFallback>
+                                <User className="w-4 h-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-semibold text-sm">
+                              {review.reviewer?.username || "Kullanıcı"}
+                            </span>
+                          </div>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= review.rating
+                                    ? "fill-warning-amber text-warning-amber"
+                                    : "text-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground">{review.comment}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(review.created_at).toLocaleDateString('tr-TR')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Star className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>Henüz değerlendirme almadınız</p>
                   </div>
                 )}
               </CardContent>
