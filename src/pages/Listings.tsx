@@ -253,6 +253,14 @@ const Listings = () => {
                             title="İlk Satış"
                           />
                         )}
+                        {listing.profile && listing.profile.total_sales >= 10 && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/itemsatissuperstari.png" 
+                            alt="Süper Star" 
+                            className="w-4 h-4"
+                            title="10+ Satış"
+                          />
+                        )}
                         <div className="flex items-center gap-1 ml-auto">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span>{Number(listing.profile?.seller_score || 0).toFixed(1)}</span>
