@@ -40,13 +40,6 @@ const Index = () => {
       {/* Featured Listings */}
       <section className="py-16 bg-gradient-to-b from-background to-muted/10">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-brand-blue via-primary to-brand-blue bg-clip-text text-transparent">
-                Öne Çıkan İlanlar
-              </span>
-            </h2>
-          </div>
           <FeaturedListings />
         </div>
       </section>
@@ -54,13 +47,6 @@ const Index = () => {
       {/* How It Works */}
       <section className="py-16 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-brand-blue to-primary bg-clip-text text-transparent">
-                Nasıl Çalışır?
-              </span>
-            </h2>
-          </div>
           <HowItWorks />
         </div>
       </section>
