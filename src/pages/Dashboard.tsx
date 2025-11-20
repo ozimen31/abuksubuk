@@ -7,10 +7,12 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, Eye, Edit, Trash2, TrendingUp, Wallet } from "lucide-react";
+import { Package, Plus, Eye, Edit, Trash2, TrendingUp, Wallet, ArrowUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -33,7 +35,7 @@ const Dashboard = () => {
     },
   });
 
-  const { data: listings } = useQuery({
+  const { data: listings, refetch: refetchListings } = useQuery({
     queryKey: ["my-listings", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -41,10 +43,84 @@ const Dashboard = () => {
         .from("listings")
         .select("*")
         .eq("user_id", session!.user.id)
+        .order("boosted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       return data;
     },
   });
+
+  const handleBoostListing = async (listingId: string) => {
+    if (!session || !profile) return;
+
+    // Check if user can boost
+    const now = new Date();
+    const lastBoostTime = profile.last_boost_time ? new Date(profile.last_boost_time) : null;
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+
+    if (lastBoostTime && lastBoostTime > threeHoursAgo) {
+      const remainingMinutes = Math.ceil((lastBoostTime.getTime() - threeHoursAgo.getTime()) / (60 * 1000));
+      toast({
+        title: "Bekleme Süresi",
+        description: `Yukarı taşıma işlemi için ${remainingMinutes} dakika beklemeniz gerekiyor`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Reset daily count if it's a new day
+    const boostDate = profile.boost_date ? new Date(profile.boost_date) : null;
+    const today = new Date().toDateString();
+    let boostCount = profile.boost_count_today || 0;
+
+    if (!boostDate || boostDate.toDateString() !== today) {
+      boostCount = 0;
+    }
+
+    if (boostCount >= 5) {
+      toast({
+        title: "Günlük Limit",
+        description: "Günde en fazla 5 ilanınızı yukarı taşıyabilirsiniz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Update listing boosted_at
+      const { error: listingError } = await supabase
+        .from("listings")
+        .update({ boosted_at: now.toISOString() })
+        .eq("id", listingId);
+
+      if (listingError) throw listingError;
+
+      // Update profile boost info
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          last_boost_time: now.toISOString(),
+          boost_count_today: boostCount + 1,
+          boost_date: today,
+        })
+        .eq("user_id", session.user.id);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Başarılı",
+        description: `İlanınız yukarı taşındı. Kalan hakkınız: ${4 - boostCount}`,
+      });
+
+      refetchListings();
+    } catch (error) {
+      console.error("Boost error:", error);
+      toast({
+        title: "Hata",
+        description: "İlan yukarı taşınırken bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (!session) {
@@ -179,6 +255,14 @@ const Dashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleBoostListing(listing.id)}
+                        title="Yukarı Taşı"
+                      >
+                        <ArrowUp className="w-4 h-4 text-brand-blue" />
+                      </Button>
                       <Button
                         size="icon"
                         variant="ghost"

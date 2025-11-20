@@ -55,10 +55,20 @@ const Listings = () => {
 
       query = query.gte("price", priceRange[0]).lte("price", priceRange[1]);
 
-      if (sortBy === "newest") query = query.order("created_at", { ascending: false });
-      if (sortBy === "price-asc") query = query.order("price", { ascending: true });
-      if (sortBy === "price-desc") query = query.order("price", { ascending: false });
-      if (sortBy === "popular") query = query.order("view_count", { ascending: false });
+      // Always prioritize boosted items
+      if (sortBy === "newest") {
+        query = query.order("boosted_at", { ascending: false, nullsFirst: false })
+                     .order("created_at", { ascending: false });
+      } else if (sortBy === "price-asc") {
+        query = query.order("boosted_at", { ascending: false, nullsFirst: false })
+                     .order("price", { ascending: true });
+      } else if (sortBy === "price-desc") {
+        query = query.order("boosted_at", { ascending: false, nullsFirst: false })
+                     .order("price", { ascending: false });
+      } else if (sortBy === "popular") {
+        query = query.order("boosted_at", { ascending: false, nullsFirst: false })
+                     .order("view_count", { ascending: false });
+      }
 
       const { data, error } = await query;
       if (error) throw error;
