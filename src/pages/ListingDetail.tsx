@@ -432,7 +432,17 @@ const ListingDetail = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium">{listing.profile?.username || "Kullanıcı"}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{listing.profile?.username || "Kullanıcı"}</p>
+                        {(listing.profile?.total_sales ?? 0) > 0 && (
+                          <img 
+                            src="https://cdn.itemsatis.com/uploads/medals/alimmagaza.png" 
+                            alt="İlk Satış Rozeti" 
+                            className="w-5 h-5"
+                            title="İlk satışını yaptı!"
+                          />
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 text-sm">
                         <Star className="w-4 h-4 fill-success-green text-success-green" />
                         <span>{Number(listing.profile?.seller_score || 0).toFixed(2)}</span>
