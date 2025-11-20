@@ -48,6 +48,45 @@ const CreateListing = () => {
     },
   });
 
+  // Fetch existing listing if editing
+  const { data: existingListing } = useQuery({
+    queryKey: ["listing", id],
+    enabled: !!id && !!session,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("id", id)
+        .eq("user_id", session!.user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Populate form with existing data when editing
+  useEffect(() => {
+    if (existingListing) {
+      setFormData({
+        title: existingListing.title,
+        description: existingListing.description,
+        price: existingListing.price.toString(),
+        category_id: existingListing.category_id,
+        platform: existingListing.platform || "",
+        tags: existingListing.tags?.join(", ") || "",
+        stock: existingListing.stock.toString(),
+        auto_delivery: existingListing.auto_delivery || false,
+        auto_delivery_content: existingListing.auto_delivery_content || "",
+      });
+      
+      // Set existing images as preview
+      if (existingListing.images) {
+        setImagePreview(existingListing.images);
+      }
+    }
+  }, [existingListing]);
+
   useEffect(() => {
     if (!session) {
       navigate("/auth");
@@ -116,24 +155,56 @@ const CreateListing = () => {
       return;
     }
 
-    const imageUrls = await uploadImages();
+    // Upload new images
+    const newImageUrls = await uploadImages();
+    
+    // Combine existing images (from preview) with new uploads
+    const existingImages = imagePreview.filter(url => url.startsWith('http'));
+    const allImages = [...existingImages, ...newImageUrls];
 
-    const { error } = await supabase.from("listings").insert({
-      ...formData,
+    const listingData = {
+      title: formData.title,
+      description: formData.description,
       price: parseFloat(formData.price),
+      category_id: formData.category_id,
+      platform: formData.platform,
       stock: parseInt(formData.stock),
-      tags: formData.tags.split(",").map(t => t.trim()),
-      images: imageUrls,
-      user_id: session.user.id,
-      status: "active",
-    });
+      tags: formData.tags.split(",").map(t => t.trim()).filter(t => t),
+      images: allImages,
+      auto_delivery: formData.auto_delivery,
+      auto_delivery_content: formData.auto_delivery_content,
+      status: "active" as const,
+    };
 
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-      return;
+    if (id) {
+      // Update existing listing
+      const { error } = await supabase
+        .from("listings")
+        .update(listingData)
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+
+      if (error) {
+        toast({ title: "Hata", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Başarılı", description: "İlan güncellendi" });
+    } else {
+      // Create new listing
+      const { error } = await supabase.from("listings").insert({
+        ...listingData,
+        user_id: session.user.id,
+      });
+
+      if (error) {
+        toast({ title: "Hata", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Başarılı", description: "İlan yayınlandı" });
     }
 
-    toast({ title: "Başarılı", description: "İlan yayınlandı" });
     navigate("/dashboard");
   };
 
