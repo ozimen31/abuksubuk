@@ -34,7 +34,7 @@ const HowItWorks = () => {
               Nasıl Çalışır?
             </span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
             Sadece 4 adımda güvenli alışverişe başlayın
           </p>
         </div>
