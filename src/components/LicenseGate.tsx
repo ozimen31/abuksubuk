@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Key, Shield } from "lucide-react";
 
 const LICENSE_STORAGE_KEY = "hesap_market_license";
+const LICENSE_IP_KEY = "hesap_market_license_ip";
 const LICENSE_ADMIN_PATH = "/192.168.1.1";
 
 interface LicenseGateProps {
@@ -20,6 +21,7 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
   const [isChecking, setIsChecking] = useState(true);
   const [licenseKey, setLicenseKey] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [currentIp, setCurrentIp] = useState<string | null>(null);
 
   // Skip license check for admin page
   const isAdminPage = location.pathname === LICENSE_ADMIN_PATH;
@@ -30,21 +32,50 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
       setIsValidated(true);
       return;
     }
-    checkStoredLicense();
+    initializeLicenseCheck();
   }, [isAdminPage]);
 
-  const checkStoredLicense = async () => {
+  const getClientIp = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("get-client-ip");
+      if (error) {
+        console.error("Error getting IP from edge function:", error);
+        return "unknown";
+      }
+      return data?.ip || "unknown";
+    } catch (error) {
+      console.error("Failed to get client IP:", error);
+      return "unknown";
+    }
+  };
+
+  const initializeLicenseCheck = async () => {
+    const ip = await getClientIp();
+    setCurrentIp(ip);
+    console.log("Current IP:", ip);
+
     const storedLicense = localStorage.getItem(LICENSE_STORAGE_KEY);
-    
+    const storedIp = localStorage.getItem(LICENSE_IP_KEY);
+
+    // If IP changed, clear stored license
+    if (storedIp && storedIp !== ip) {
+      console.log("IP changed, clearing license");
+      localStorage.removeItem(LICENSE_STORAGE_KEY);
+      localStorage.removeItem(LICENSE_IP_KEY);
+      setIsChecking(false);
+      return;
+    }
+
     if (storedLicense) {
-      const isValid = await validateLicense(storedLicense, false);
+      const isValid = await validateLicense(storedLicense, false, ip);
       if (isValid) {
         setIsValidated(true);
       } else {
         localStorage.removeItem(LICENSE_STORAGE_KEY);
+        localStorage.removeItem(LICENSE_IP_KEY);
       }
     }
-    
+
     setIsChecking(false);
   };
 
@@ -55,7 +86,7 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
     return groups ? groups.join("-") : normalized;
   };
 
-  const validateLicense = async (rawKey: string, activate: boolean = true): Promise<boolean> => {
+  const validateLicense = async (rawKey: string, activate: boolean = true, ip: string): Promise<boolean> => {
     const normalized = normalizeKey(rawKey);
     if (normalized.length !== 16) return false;
 
@@ -78,6 +109,17 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
       return false;
     }
 
+    // Check if already activated by different IP
+    if (data.activated_ip && data.activated_ip !== ip) {
+      console.warn("License already used by different IP", { 
+        key, 
+        activatedIp: data.activated_ip, 
+        currentIp: ip 
+      });
+      toast.error("Bu lisans başka bir IP adresinde kullanılıyor");
+      return false;
+    }
+
     // If activating for first time
     if (activate && !data.activated_at) {
       const { error: updateError } = await supabase
@@ -85,6 +127,7 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
         .update({
           activated_at: new Date().toISOString(),
           activated_by: navigator.userAgent.substring(0, 100),
+          activated_ip: ip,
         })
         .eq("id", data.id);
 
@@ -108,17 +151,23 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
 
     const formatted = formatKey(normalized);
 
+    if (!currentIp) {
+      toast.error("IP adresi alınamadı, lütfen tekrar deneyin");
+      return;
+    }
+
     setIsValidating(true);
 
-    const isValid = await validateLicense(formatted);
+    const isValid = await validateLicense(formatted, true, currentIp);
 
     if (isValid) {
       localStorage.setItem(LICENSE_STORAGE_KEY, formatted);
+      localStorage.setItem(LICENSE_IP_KEY, currentIp);
       setLicenseKey(formatted);
       setIsValidated(true);
       toast.success("Lisans doğrulandı!");
     } else {
-      toast.error("Geçersiz veya süresi dolmuş lisans anahtarı");
+      toast.error("Geçersiz, süresi dolmuş veya başka IP'de kullanılan lisans anahtarı");
     }
 
     setIsValidating(false);
@@ -147,6 +196,9 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
           <CardDescription>
             Siteye erişmek için geçerli bir lisans anahtarı girin
           </CardDescription>
+          {currentIp && (
+            <p className="text-xs text-muted-foreground">IP: {currentIp}</p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
