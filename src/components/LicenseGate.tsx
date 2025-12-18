@@ -48,15 +48,28 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
     setIsChecking(false);
   };
 
-  const validateLicense = async (key: string, activate: boolean = true): Promise<boolean> => {
+  const normalizeKey = (raw: string) => raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  const formatKey = (normalized: string) => {
+    const groups = normalized.match(/.{1,4}/g);
+    return groups ? groups.join("-") : normalized;
+  };
+
+  const validateLicense = async (rawKey: string, activate: boolean = true): Promise<boolean> => {
+    const normalized = normalizeKey(rawKey);
+    if (normalized.length !== 16) return false;
+
+    const key = formatKey(normalized);
+
     const { data, error } = await supabase
       .from("license_keys")
       .select("*")
-      .eq("key_code", key.toUpperCase().trim())
+      .eq("key_code", key)
       .eq("is_active", true)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
+      console.warn("License validation failed", { key, error });
       return false;
     }
 
@@ -67,13 +80,17 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
 
     // If activating for first time
     if (activate && !data.activated_at) {
-      await supabase
+      const { error: updateError } = await supabase
         .from("license_keys")
         .update({
           activated_at: new Date().toISOString(),
           activated_by: navigator.userAgent.substring(0, 100),
         })
         .eq("id", data.id);
+
+      if (updateError) {
+        console.warn("License activation update failed", { key, updateError });
+      }
     }
 
     return true;
@@ -81,24 +98,29 @@ const LicenseGate = ({ children }: LicenseGateProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!licenseKey.trim()) {
-      toast.error("Lütfen lisans anahtarını girin");
+
+    const normalized = normalizeKey(licenseKey);
+
+    if (normalized.length !== 16) {
+      toast.error("Lisans anahtarı 16 karakter olmalı (XXXX-XXXX-XXXX-XXXX)");
       return;
     }
 
+    const formatted = formatKey(normalized);
+
     setIsValidating(true);
-    
-    const isValid = await validateLicense(licenseKey);
-    
+
+    const isValid = await validateLicense(formatted);
+
     if (isValid) {
-      localStorage.setItem(LICENSE_STORAGE_KEY, licenseKey.toUpperCase().trim());
+      localStorage.setItem(LICENSE_STORAGE_KEY, formatted);
+      setLicenseKey(formatted);
       setIsValidated(true);
       toast.success("Lisans doğrulandı!");
     } else {
       toast.error("Geçersiz veya süresi dolmuş lisans anahtarı");
     }
-    
+
     setIsValidating(false);
   };
 

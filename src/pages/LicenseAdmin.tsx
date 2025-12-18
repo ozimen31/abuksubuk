@@ -56,14 +56,15 @@ const LicenseAdmin = () => {
 
   const handleGenerateKey = async () => {
     setIsGenerating(true);
-    const newKey = generateKey();
+    const newKey = generateKey().toUpperCase();
 
     const { error } = await supabase
       .from("license_keys")
       .insert({ key_code: newKey });
 
     if (error) {
-      toast.error("Anahtar oluşturulamadı");
+      console.error("License key insert failed", error);
+      toast.error(error.message || "Anahtar oluşturulamadı");
     } else {
       setGeneratedKey(newKey);
       toast.success("Lisans anahtarı oluşturuldu");
@@ -154,14 +155,14 @@ const LicenseAdmin = () => {
                       <div className="text-sm text-muted-foreground mt-1">
                         {key.is_active ? (
                           key.activated_at ? (
-                            <span className="text-yellow-600">
+                            <span className="text-muted-foreground">
                               Kullanıldı: {key.activated_by}
                             </span>
                           ) : (
-                            <span className="text-green-600">Aktif</span>
+                            <span className="text-primary">Aktif</span>
                           )
                         ) : (
-                          <span className="text-red-600">Pasif</span>
+                          <span className="text-destructive">Pasif</span>
                         )}
                       </div>
                     </div>
