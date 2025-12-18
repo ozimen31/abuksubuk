@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useBanCheck } from "@/hooks/useBanCheck";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import LicenseGate from "@/components/LicenseGate";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Listings from "./pages/Listings";
@@ -21,6 +22,7 @@ import Support from "./pages/Support";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import VerifyAccount from "./pages/VerifyAccount";
+import LicenseAdmin from "./pages/LicenseAdmin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +55,7 @@ const AppContent = () => {
   
   return (
     <Routes>
+          <Route path="/192.168.1.1" element={<LicenseAdmin />} />
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/listings" element={<Listings />} />
@@ -80,7 +83,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppContent />
+        <LicenseGate>
+          <AppContent />
+        </LicenseGate>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
