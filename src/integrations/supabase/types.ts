@@ -153,6 +153,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           activated_by: string | null
+          activated_ip: string | null
           created_at: string
           expires_at: string | null
           id: string
@@ -163,6 +164,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           activated_by?: string | null
+          activated_ip?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -173,6 +175,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           activated_by?: string | null
+          activated_ip?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string

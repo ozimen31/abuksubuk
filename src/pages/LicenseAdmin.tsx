@@ -155,11 +155,16 @@ const LicenseAdmin = () => {
                       <div className="text-sm text-muted-foreground mt-1">
                         {key.is_active ? (
                           key.activated_at ? (
-                            <span className="text-muted-foreground">
-                              Kullanıldı: {key.activated_by}
-                            </span>
+                            <div className="space-y-1">
+                              <span className="text-muted-foreground block">
+                                IP: {key.activated_ip || "Bilinmiyor"}
+                              </span>
+                              <span className="text-xs text-muted-foreground/70">
+                                {new Date(key.activated_at).toLocaleString("tr-TR")}
+                              </span>
+                            </div>
                           ) : (
-                            <span className="text-primary">Aktif</span>
+                            <span className="text-primary">Aktif - Kullanılmadı</span>
                           )
                         ) : (
                           <span className="text-destructive">Pasif</span>
