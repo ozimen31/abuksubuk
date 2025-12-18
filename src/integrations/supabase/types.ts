@@ -149,6 +149,39 @@ export type Database = {
         }
         Relationships: []
       }
+      license_keys: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_code: string
+          notes: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_code: string
+          notes?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_code?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           auto_delivery: boolean | null
